@@ -1,7 +1,10 @@
 import unittest
 
+from pyspark import SparkContext
+
 import SparseVector
 import LogisticRegression
+import ParallelLogisticRegression
 
 
 
@@ -31,4 +34,28 @@ class LogsticRegressionTestCase(unittest.TestCase):
         ]
         beta = SparseVector.SparseVector({'a': 2, 'b': 2})
         scores = LogisticRegression.test(data, beta)
-        print scores
+
+
+class ParallelLogisticRegressionTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(ParallelLogisticRegressionTestCase, cls).setUpClass()
+        cls.sc = SparkContext(appName="ParallelLogisticRegressionTestCase")
+
+    @classmethod
+    def tearDownClass(cls):
+        super(ParallelLogisticRegressionTestCase, cls).tearDownClass()
+        cls.sc.stop()
+
+    def test_gradTotalLoss(self):
+        rdd = self.sc.parallelize([
+        (SparseVector.SparseVector({'a': -1, 'b': -1}), -1),
+        (SparseVector.SparseVector({'a': -1, 'b': -1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1)
+        ])
+        beta = SparseVector.SparseVector({'a':2, 'b':3})
+        kek = ParallelLogisticRegression.gradTotalLossRDD(rdd, beta)
+        print kek
