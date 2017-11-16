@@ -4,11 +4,11 @@ import numpy as np
 
 class SparseVector(dict):
     """
-       A class implementing a sparse vector as a dictionary. 
-       A sparse vector is a vector that contains only a few non-zero values. 
-       Each non-zero value is associated with a feature (e.g., "age", "height", "weight"). 
+       A class implementing a sparse vector as a dictionary.
+       A sparse vector is a vector that contains only a few non-zero values.
+       Each non-zero value is associated with a feature (e.g., "age", "height", "weight").
        The sparse vector is represented as a dictionary with features as keys and the
-       coordinates of the vector as values. If a feature is not present in the dictionary, 
+       coordinates of the vector as values. If a feature is not present in the dictionary,
        it is assumed that the corresponding value of the vector is zero.
     """
 
@@ -57,7 +57,7 @@ class SparseVector(dict):
         """ Multiply a sparse vector x with a scalar. That is
                  x * s
 	    will return a sparse vector containing the coordinates of x multiplied by s
-        """	
+        """
         return SparseVector( [ (key,s*self[key])     for key in self] )
 
 
@@ -65,10 +65,16 @@ class SparseVector(dict):
         """ Multiply a sparse vector x with a scalar from the right. That is
 		s * x
 	     will return a sparse vector containing the coordinates of x  multiplied by s
-	
-        """	
+
+        """
         return self * s
 
+    def __pow__(self, power):
+        return np.power(np.array(self.values()), power)
 
-
-
+    def norm(self, p=2):
+        """
+        Return the Euclidean p-norm of a sparse vector.
+        """
+        values = np.array(self.values())
+        return np.linalg.norm(values, p)

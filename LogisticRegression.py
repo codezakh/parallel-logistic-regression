@@ -23,7 +23,7 @@ def readBeta(input):
 def writeBeta(output,beta):
     """ Write a vector β to a file ouptut.  Each line of output contains pairs of the form:
                 (feature,value)
- 
+
     """
     with open(output,'w') as fh:
         for key in beta:
@@ -37,18 +37,18 @@ def writeBeta(output,beta):
 def readData(input_file):
     """  Read data from an input file. Each line of the file contains tuples of the form
 
-                    (x,y)  
+                    (x,y)
 
-         x is a dictionary of the form:                 
+         x is a dictionary of the form:
 
            { "feature1": value, "feature2":value, ...}
 
          and y is a binary value +1 or -1.
 
          The return value is a list containing tuples of the form
-                 (SparseVector(x),y)             
+                 (SparseVector(x),y)
 
-    """ 
+    """
     listSoFar = []
     with open(input_file,'r') as fh:
         for line in fh:
@@ -62,7 +62,7 @@ def readData(input_file):
 
 
 def getAllFeatures(data):
-    """ Get all the features present in dataset data. 
+    """ Get all the features present in dataset data.
 	The input is:
             - data: a python list containing pairs of the form (x,y), where x is a sparse vector and y is a binary value
 
@@ -73,14 +73,14 @@ def getAllFeatures(data):
     features = SparseVector({})
     for (x,y) in data:
         features = features + x
-    return features.keys() 
+    return features.keys()
 
 
 
 def logisticLoss(beta,x,y):
     """
         Given sparse vector beta, a sparse vector x, and a binary value y in {-1,+1}, compute the logistic loss
-               
+
                 l(β;x,y) = log( 1.0 + exp(-y * <β,x>) )
 
 	The input is:
@@ -89,14 +89,14 @@ def logisticLoss(beta,x,y):
             - y: a binary value in {-1,+1}
 
     """
-    pass
+    return  np.log(1 + np.exp(-y * beta.dot(x)))
 
 
 
 def gradLogisticLoss(beta,x,y):
     """
-        Given a sparse vector beta, a sparse vector x, and 
-        a binary value y in {-1,+1}, compute the gradient of the logistic loss 
+        Given a sparse vector beta, a sparse vector x, and
+        a binary value y in {-1,+1}, compute the gradient of the logistic loss
 
               ∇l(B;x,y) = -y / (1.0 + exp(y <β,x> )) * x
 
@@ -107,52 +107,55 @@ def gradLogisticLoss(beta,x,y):
 
 
     """
-    pass
-  
+    return ((-int(y) / (1.0 + np.exp(y * beta.dot(x)))) * x)
+
 
 
 def totalLoss(data,beta,lam = 0.0):
     """  Given a sparse vector beta and a dataset  compute the regularized total logistic loss :
-              
-               L(β) = Σ_{(x,y) in data}  l(β;x,y)  + λ ||β ||_2^2             
-        
+
+               L(β) = Σ_{(x,y) in data}  l(β;x,y)  + λ ||β ||_2^2
+
          Inputs are:
             - data: a python list containing pairs of the form (x,y), where x is a sparse vector and y is a binary value
             - beta: a sparse vector β
             - lam: the regularization parameter λ
     """
-    loss = 0.0 
+    loss = 0.0
     for (x,y) in data:
         loss += logisticLoss(beta,x,y)
-    return loss + lam * beta.dot(beta) 
+    return loss + lam * beta.dot(beta)
 
 
 
 def gradTotalLoss(data,beta, lam = 0.0):
     """  Given a sparse vector beta and a dataset compute the gradient of regularized total logistic loss :
-            
-              ∇L(β) = Σ_{(x,y) in data}  ∇l(β;x,y)  + 2λ β   
-        
+
+              ∇L(β) = Σ_{(x,y) in data}  ∇l(β;x,y)  + 2λ β
+
          Inputs are:
             - data: a python list containing pairs of the form (x,y), where x is a sparse vector and y is a binary value
             - beta: a sparse vector β
             - lam: the regularization parameter λ
-    """    
-    pass	
+    """
+    total_loss = SparseVector({})
+    for (x, y) in data:
+        total_loss += gradLogisticLoss(beta, x, y)
+    return total_loss + lam * beta
 
 
 def lineSearch(fun,x,grad,fx,gradNormSq, a=0.2,b=0.6):
-    """ Given function fun, a current argument x, and gradient grad=∇fun(x), 
+    """ Given function fun, a current argument x, and gradient grad=∇fun(x),
         perform backtracking line search to find the next point to move to.
         (see Boyd and Vandenberghe, page 464).
 
         Both x and grad are presumed to be SparseVectors.
-	
+
         Inputs are:
 	    - fun: the objective function f.
 	    - x: the present input (a Sparse Vector)
             - grad: the present gradient (as Sparse Vector)
-            - fx: precomputed f(x) 
+            - fx: precomputed f(x)
             - grad: precomputed ∇f(x)
             - Optional parameters a,b  are the parameters of the line search.
 
@@ -164,24 +167,24 @@ def lineSearch(fun,x,grad,fx,gradNormSq, a=0.2,b=0.6):
     t = 1.0
     while fun(x-t*grad) > fx- a * t * gradNormSq:
         t = b * t
-    return t 
- 
-    
+    return t
+
+
 def test(data,beta):
     """ Output the quantities necessary to compute the accuracy, precision, and recall of the prediction of labels in a dataset under a given β.
-        
+
         The accuracy (ACC), precision (PRE), and recall (REC) are defined in terms of the following sets:
 
                  P = datapoints (x,y) in data for which <β,x> > 0
                  N = datapoints (x,y) in data for which <β,x> <= 0
-                 
-                 TP = datapoints in (x,y) in P for which y=+1  
-                 FP = datapoints in (x,y) in P for which y=-1  
+
+                 TP = datapoints in (x,y) in P for which y=+1
+                 FP = datapoints in (x,y) in P for which y=-1
                  TN = datapoints in (x,y) in N for which y=-1
                  FN = datapoints in (x,y) in N for which y=+1
 
         For #XXX the number of elements in set XXX, the accuracy, precision, and recall of parameter vector β over data are defined as:
-         
+
                  ACC(β,data) = ( #TP+#TN ) / (#P + #N)
                  PRE(β,data) = #TP / (#TP + #FP)
                  REC(β,data) = #TP/ (#TP + #FN)
@@ -192,9 +195,27 @@ def test(data,beta):
 
         The return values are
              - ACC, PRE, REC
-       
+
     """
-    pass
+    scores = np.array([beta.dot(features) for features, labels in data])
+    labels = np.array([label for _,label in data])
+
+    P = scores > 0
+    N = scores <= 0
+
+    TP = np.sum(
+        P & (labels==1)
+        ) + 0.0001
+    FP = np.sum(P & (labels==-1)) + 0.0001
+    TN = np.sum(N & (labels==-1)) + 0.0001
+    FN = np.sum(N & (labels==1)) + 0.0001
+
+    ACC = (TP + TN) / (np.sum(P) + np.sum(N))
+    PRE = TP / (TP + FP)
+    REC = TP / (TP + FN)
+    import pdb; pdb.set_trace()
+    return ACC, PRE, REC
+
 
 
 def train(data,beta_0, lam,max_iter,eps,test_data=None):
@@ -202,7 +223,7 @@ def train(data,beta_0, lam,max_iter,eps,test_data=None):
 
 	The function minimizes:
 
-               L(β) = Σ_{(x,y) in data}  l(β;x,y)  + λ ||β||_2^2             
+               L(β) = Σ_{(x,y) in data}  l(β;x,y)  + λ ||β||_2^2
 
         using gradient descent.
 
@@ -213,7 +234,7 @@ def train(data,beta_0, lam,max_iter,eps,test_data=None):
             - max_iter: the maximum number of iterations
             - eps: the tolerance ε
             - test_data (optional): data over which model β is tested in each iteration w.r.t. accuracy, precision, and recall
-            
+
         The return values are:
             - beta: the trained β, as a sparse vector
             - gradNorm: the norm ||∇L(β)||_2
@@ -225,15 +246,15 @@ def train(data,beta_0, lam,max_iter,eps,test_data=None):
     beta = beta_0
     start = time()
     while k<max_iter and gradNorm > eps:
-        obj = totalLoss(data,beta,lam)   
+        obj = totalLoss(data,beta,lam)
 
-        grad = gradTotalLoss(data,beta,lam)  
+        grad = gradTotalLoss(data,beta,lam)
 	gradNormSq = grad.dot(grad)
         gradNorm = np.sqrt(gradNormSq)
 
         fun = lambda x: totalLoss(data,x,lam)
         gamma = lineSearch(fun,beta,grad,obj,gradNormSq)
-        
+
         beta = beta - gamma * grad
         if test_data == None:
             print 'k = ',k,'\tt = ',time()-start,'\tL(β_k) = ',obj,'\t||∇L(β_k)||_2 = ',gradNorm,'\tgamma = ',gamma
@@ -242,26 +263,26 @@ def train(data,beta_0, lam,max_iter,eps,test_data=None):
             print 'k = ',k,'\tt = ',time()-start,'\tL(β_k) = ',obj,'\t||∇L(β_k)||_2 = ',gradNorm,'\tgamma = ',gamma,'\tACC = ',acc,'\tPRE = ',pre,'\tREC = ',rec
         k = k + 1
 
-    return beta,gradNorm,k         
+    return beta,gradNorm,k
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Logistic Regression.',formatter_class=argparse.ArgumentDefaultsHelpFormatter)    
+    parser = argparse.ArgumentParser(description = 'Logistic Regression.',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('traindata',default=None, help='Input file containing (x,y) pairs, used to train a logistic model')
     parser.add_argument('--testdata',default=None, help='Input file containing (x,y) pairs, used to test a logistic model')
     parser.add_argument('--beta', default='beta', help='File where beta is stored (when training) and read from (when testing)')
     parser.add_argument('--lam', type=float,default=0.0, help='Regularization parameter λ')
     parser.add_argument('--max_iter', type=int,default=100, help='Maximum number of iterations')
-    parser.add_argument('--eps', type=float, default=0.1, help='ε-tolerance. If the l2_norm gradient is smaller than ε, gradient descent terminates.') 
+    parser.add_argument('--eps', type=float, default=0.1, help='ε-tolerance. If the l2_norm gradient is smaller than ε, gradient descent terminates.')
 
-    
+
     args = parser.parse_args()
-    
+
 
     print 'Reading training data from',args.traindata
     traindata = readData(args.traindata)
     print 'Read',len(traindata),'data points with',len(getAllFeatures(traindata)),'features in total'
-    
+
     if args.testdata is not None:
         print 'Reading test data from',args.testdata
         testdata = readData(args.testdata)
@@ -272,7 +293,7 @@ if __name__ == "__main__":
     beta0 = SparseVector({})
 
     print 'Training on data from',args.traindata,'with λ =',args.lam,', ε =',args.eps,', max iter = ',args.max_iter
-    beta, gradNorm, k = train(traindata,beta_0=beta0,lam=args.lam,max_iter=args.max_iter,eps=args.eps,test_data=testdata) 
+    beta, gradNorm, k = train(traindata,beta_0=beta0,lam=args.lam,max_iter=args.max_iter,eps=args.eps,test_data=testdata)
     print 'Algorithm ran for',k,'iterations. Converged:',gradNorm<args.eps
     print 'Saving trained β in',args.beta
     writeBeta(args.beta,beta)
