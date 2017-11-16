@@ -213,7 +213,6 @@ def test(data,beta):
     ACC = (TP + TN) / (np.sum(P) + np.sum(N))
     PRE = TP / (TP + FP)
     REC = TP / (TP + FN)
-    import pdb; pdb.set_trace()
     return ACC, PRE, REC
 
 
