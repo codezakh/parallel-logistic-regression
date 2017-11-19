@@ -37,13 +37,31 @@ def getAllFeaturesRDD(dataRDD):
 
         The return value is an RDD containing the union of all unique features present in sparse vectors inside dataRDD.
     """
-    return []
+    return dataRDD.flatMap(lambda x: x[0].keys()).distinct()
 
 def totalLossRDD(dataRDD,beta,lam = 0.0):
+    """  Given a sparse vector beta and a dataset  compute the regularized total logistic loss :
+
+               L(β) = Σ_{(x,y) in data}  l(β;x,y)  + λ ||β ||_2^2
+
+         Inputs are:
+            - data: a rdd containing pairs of the form (x,y), where x is a sparse vector and y is a binary value
+            - beta: a sparse vector β
+            - lam: the regularization parameter λ
+    """
     total_loss = dataRDD.map(lambda elem: logisticLoss(beta, elem[0], elem[1])).sum()
     return total_loss + lam * beta.dot(beta)
 
 def gradTotalLossRDD(dataRDD,beta,lam = 0.0):
+    """  Given a sparse vector beta and a dataset compute the gradient of regularized total logistic loss :
+
+              ∇L(β) = Σ_{(x,y) in data}  ∇l(β;x,y)  + 2λ β
+
+         Inputs are:
+            - data: a rdd containing pairs of the form (x,y), where x is a sparse vector and y is a binary value
+            - beta: a sparse vector β
+            - lam: the regularization parameter λ
+    """
     grad_total_loss = dataRDD.map(lambda elem: gradLogisticLoss(beta, elem[0], elem[1])).\
         fold(SparseVector({}), add)
     return grad_total_loss + lam * beta
@@ -152,12 +170,12 @@ if __name__ == "__main__":
 
     print 'Reading training data from',args.traindata
     traindata = readDataRDD(args.traindata, sc)
-    print 'Read',traindata.count(),'data points with',len(getAllFeaturesRDD(traindata)),'features in total'
+    print 'Read',traindata.count(),'data points with',getAllFeaturesRDD(traindata).count(),'features in total'
 
     if args.testdata is not None:
         print 'Reading test data from',args.testdata
         testdata = readDataRDD(args.testdata, sc)
-        print 'Read',testdata.count(),'data points with',len(getAllFeaturesRDD(testdata)),'features'
+        print 'Read',testdata.count(),'data points with',getAllFeaturesRDD(testdata).count(),'features'
     else:
         testdata = None
 
