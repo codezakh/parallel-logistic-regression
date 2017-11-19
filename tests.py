@@ -58,4 +58,17 @@ class ParallelLogisticRegressionTestCase(unittest.TestCase):
         ])
         beta = SparseVector.SparseVector({'a':2, 'b':3})
         kek = ParallelLogisticRegression.gradTotalLossRDD(rdd, beta)
+
+    def test_test(self):
+        rdd = self.sc.parallelize([
+        (SparseVector.SparseVector({'a': -1, 'b': -1}), -1),
+        (SparseVector.SparseVector({'a': -1, 'b': -1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1),
+        (SparseVector.SparseVector({'a':1, 'b': 1}), 1)
+        ])
+        beta = SparseVector.SparseVector({'a':2, 'b':3})
+
+        kek = ParallelLogisticRegression.test(rdd, beta)
         print kek
