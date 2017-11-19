@@ -248,7 +248,7 @@ def train(data,beta_0, lam,max_iter,eps,test_data=None):
         obj = totalLoss(data,beta,lam)
 
         grad = gradTotalLoss(data,beta,lam)
-	gradNormSq = grad.dot(grad)
+        gradNormSq = grad.dot(grad)
         gradNorm = np.sqrt(gradNormSq)
 
         fun = lambda x: totalLoss(data,x,lam)
